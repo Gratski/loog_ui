@@ -327,6 +327,16 @@
 
 <div class="content" role="main">
 
+  <h1>Product Image</h1>
+  <input type="file" (change)="onFileSelected('product', $event)" id="productFile" name="productFile"/><br>
+  <button (click)="erase('product', 0, 0)">Erase</button>
+
+  <h1>Background Image</h1>
+  <input type="file" (change)="onFileSelected('background', $event)" id="backgroundFile" name="backgroundFile"/>
+  
+  <canvas #productCanvas style="width: 450px; height: 250px;"></canvas>
+  <canvas #backgroundCanvas></canvas>
+
   <!-- Highlight Card -->
   <div class="card highlight-card card-small">
 
