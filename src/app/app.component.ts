@@ -1,5 +1,13 @@
 import { Component, ElementRef, ViewChild, Renderer2 } from '@angular/core';
 import { PolygonCoordinate } from './types/CanvasTypes';
+import { HttpClient } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, retry } from 'rxjs/operators';
+
+
+interface CodeAnalisys {
+  result: String
+}
 
 @Component({
   selector: 'app-root',
@@ -10,7 +18,16 @@ export class AppComponent {
   title = 'web_customer_app';
   selectedFile = null;
 
-  isDrawing: boolean = false;
+  public isLoading: Boolean;
+
+  public codeSnippet: String;
+  public intention: String;
+  public analysis: String;
+
+  public convertToOtherLanguage: Boolean = false;
+  public targetLanguage: String;
+
+  // source images
 
   // canvas
   @ViewChild('productCanvas') productCanvas: ElementRef;
@@ -25,7 +42,7 @@ export class AppComponent {
   @ViewChild('productFileInput') productFileInput: ElementRef;
   @ViewChild('backgroundFileInput') backgroundFileInput: ElementRef;
 
-  constructor(private renderer: Renderer2) {}
+  constructor(private renderer: Renderer2, private http: HttpClient) {}
 
   ngAfterViewInit() {
     // start canvas drawing contexts
@@ -34,6 +51,27 @@ export class AppComponent {
     } else {
       console.log('Canvas drawing is not supported');
     }
+  }
+
+  public intentionChanged() {
+    console.log('converting')
+    
+  }
+
+  public submitCode() {
+    console.log('test')
+    this.isLoading = true
+    this.http.post<CodeAnalisys>('/api/code/analysis2', {
+      model: "gpt-3.5-turbo",
+      messages: [
+        {role: "user", content: "I am a software engineer and I want to change the following code for better performance while using the minimum amount of CPU and memory."},
+        {role: "user", content: this.codeSnippet},
+        {role: "user", content: this.intention == 'convert' ? this.targetLanguage : this.intention}
+      ]
+    }).subscribe((data: CodeAnalisys) => {
+      this.isLoading = false
+      this.analysis = data.result;
+    })
   }
 
   /**
@@ -69,33 +107,12 @@ export class AppComponent {
     canvasContext!.globalCompositeOperation = 'source-over';
   }
 
-  ////////////////////////////////////////////////////////////////////////////
-  // LOGO POLYGON
-  ////////////////////////////////////////////////////////////////////////////
-  resetLogoPolygon() {
-    this.logoPolygonCoordinates = [];
-  }
-
-  toggleIsDrawingPolygon() {
-    this.isDrawing = !this.isDrawing;
-  }
-
-  addProductPolygonCoordinates(x:number, y:number) {
-
-  }
-
   addLogoPolygonCoordinates(x:number, y:number) {
     if(this.logoPolygonCoordinates.length > 0 && this.logoPolygonCoordinates[0].x == x && this.logoPolygonCoordinates[0].y == y) {
       console.log("close polygon");
       console.log("erase!");
     }
     this.logoPolygonCoordinates.push({x: x, y: y})
-  }
-
-  mouseClickedOnDrawing(event:any) {
-    // posicao relativa
-    // adicionar a coods polygon
-    // representar stroke em canvas
   }
 
   /**
@@ -117,7 +134,7 @@ export class AppComponent {
     reader.onload = e => {
       let img = new Image;
       img.onload = function(){
-        canvasContext?.drawImage(img, 0, 0, img.width,    img.height,     // source rectangle
+        canvasContext?.drawImage(img, 0, 0, img.width,    img.height,
                    0, 0, canvas.nativeElement.width, canvas.nativeElement.height);
       };
       img.src = URL.createObjectURL(file);
