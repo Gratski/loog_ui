@@ -64,7 +64,7 @@ export class AppComponent {
     this.http.post<CodeAnalisys>('/api/code/analysis2', {
       model: "gpt-3.5-turbo",
       messages: [
-        {role: "user", content: "I am a software engineer, and I want to change the following code for better performance while using the minimum amount of CPU and memory."},
+        {role: "user", content: "I am a software engineer and I want to change the following code for better performance while using the minimum amount of CPU and memory."},
         {role: "user", content: this.codeSnippet},
         {role: "user", content: this.intention == 'convert' ? this.targetLanguage : this.intention}
       ]
